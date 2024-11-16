@@ -1,0 +1,33 @@
+networks:
+    backend:
+
+services:
+  api:
+    image: api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: on-failure
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - RUNNING_IN_DOCKER=1
+    networks:
+      - "backend"
+
+  postgres:
+    image: postgres:15-alpine
+    restart: on-failure
+    networks:
+      - backend
+    environment:
+      - POSTGRES_PASSWORD={{sensitive_data}}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+
+volumes:
+  postgres_data:
